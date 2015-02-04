@@ -4,5 +4,6 @@ apply plugin: 'eclipse'
 sourceCompatibility=1.7
 targetCompatibility=1.7
 
-group = "mnm.mods"
+archivesBaseName = "Kappa-core"
+group = "mnm.mods.kappa"
 version = "1.0"

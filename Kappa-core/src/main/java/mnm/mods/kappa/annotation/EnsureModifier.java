@@ -1,4 +1,4 @@
-package mnm.mods.kappa.annotation.meta;
+package mnm.mods.kappa.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
