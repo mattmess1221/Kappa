@@ -1,0 +1,9 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+sourceCompatibility=1.7
+targetCompatibility=1.7
+
+archivesBaseName = "Kappa-core"
+group = "mnm.mods.kappa"
+version = "1.0"
