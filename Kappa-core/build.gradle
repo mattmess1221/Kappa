@@ -6,4 +6,16 @@ targetCompatibility=1.7
 
 archivesBaseName = "Kappa-core"
 group = "mnm.mods.kappa"
-version = "1.0"
+version = "1.1"
+
+repositories.mavenCentral()
+dependencies.compile "com.google.code.gson:gson:2.2.4"
+
+jar {
+    // package deps so factory path doesn't require further tweaking.
+    configurations.compile.each { dep ->
+        from (project.zipTree(dep)) {
+            exclude 'META-INF', 'META-INF/**'
+        }
+    }
+}

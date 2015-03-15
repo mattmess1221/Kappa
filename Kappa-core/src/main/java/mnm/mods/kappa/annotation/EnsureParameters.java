@@ -28,5 +28,5 @@ public @interface EnsureParameters {
      *
      * @return The values
      */
-    String[] values();
+    String[] value();
 }
