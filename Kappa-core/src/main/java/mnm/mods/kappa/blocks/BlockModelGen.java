@@ -2,7 +2,9 @@ package mnm.mods.kappa.blocks;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -28,9 +30,17 @@ import com.google.gson.GsonBuilder;
 public class BlockModelGen extends AbstractProcessor {
 
     private Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    // Keep track of the files we create so we don't create any twice.
+    private Map<Type, Set<String>> createdFiles = new EnumMap<>(Type.class);
 
     private Messager messager;
     private Filer filer;
+
+    public BlockModelGen() {
+        createdFiles.put(Type.BLOCK_MODEL, new HashSet<String>());
+        createdFiles.put(Type.BLOCK_STATE, new HashSet<String>());
+        createdFiles.put(Type.ITEM_MODEL, new HashSet<String>());
+    }
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
@@ -59,9 +69,13 @@ public class BlockModelGen extends AbstractProcessor {
                 FileObject file;
                 switch (s) {
                 case BLOCK_STATE:
+                    if (createdFiles.get(s).contains(namespace + ":" + blockname)) {
+                        break;
+                    }
                     file = filer.createResource(StandardLocation.CLASS_OUTPUT,
                             s.getPackage(namespace), blockname + ".json", element);
                     fillBlockState(block, file);
+                    createdFiles.get(s).add(namespace + ":" + blockname);
                     break;
                 case BLOCK_MODEL:
                     for (int i = 0; i < block.variants().length; i++) {
@@ -73,10 +87,14 @@ public class BlockModelGen extends AbstractProcessor {
                         if (model.isEmpty()) {
                             model = blockname + "_" + i;
                         }
+                        if (createdFiles.get(s).contains(namespace + ":block/" + model)) {
+                            continue;
+                        }
                         try {
                             file = filer.createResource(StandardLocation.CLASS_OUTPUT, s.getPackage(namespace),
                                     model + ".json", element);
                             fillBlockModel(block, var, file);
+                            createdFiles.get(s).add(namespace + ":block/" + model);
                         } catch (IllegalArgumentException e) {
                             messager.printMessage(Kind.MANDATORY_WARNING, e.getMessage(), element);
                         }
@@ -92,9 +110,13 @@ public class BlockModelGen extends AbstractProcessor {
                         if (model.isEmpty()) {
                             model = blockname + "_" + i;
                         }
+                        if (createdFiles.get(s).contains(namespace + ":" + model)) {
+                            continue;
+                        }
                         file = filer.createResource(StandardLocation.CLASS_OUTPUT, s.getPackage(namespace),
                                 model + ".json", element);
                         fillItemModel(model, block.namespace(), file);
+                        createdFiles.get(s).add(namespace + ":" + model);
                     }
                     break;
                 }
@@ -108,7 +130,7 @@ public class BlockModelGen extends AbstractProcessor {
         Writer writer = null;
         try {
             writer = file.openWriter();
-            writer.write(gson.toJson(new Blockstate(blockDef)));
+            writer.write(gson.toJson(new Blockstate(blockDef)).replace("\\u003d", "="));
             writer.flush();
         } finally {
             if (writer != null) {
@@ -185,12 +207,14 @@ public class BlockModelGen extends AbstractProcessor {
 
     @SuppressWarnings("unused")
     private class Blockstate {
-        Map<String, Model> variants = new HashMap<String, Model>();
+        Map<String, Map<String, Object>> variants = new HashMap<>();
 
         private Blockstate(BlockDef block) {
             BlockVariant[] states = block.variants();
             if (states.length == 0) {
-                variants.put("normal", new Model(block.namespace() + ":" + block.blockname()));
+                Map<String, Object> map = new HashMap<>();
+                map.put("model", block.namespace() + ":" + block.blockname());
+                variants.put("normal", map);
                 return;
             }
             for (int i = 0; i < block.variants().length; i++) {
@@ -200,7 +224,15 @@ public class BlockModelGen extends AbstractProcessor {
                 if (model.isEmpty()) {
                     model = block.blockname() + "_" + i;
                 }
-                variants.put(variant, new Model(block.namespace() + ":" + model));
+                Map<String, Object> map = new HashMap<>();
+                map.put("model", block.namespace() + ":" + model);
+                if (var.pitch() != 0) {
+                    map.put("x", var.pitch());
+                }
+                if (var.yaw() != 0) {
+                    map.put("y", var.yaw());
+                }
+                variants.put(variant, map);
             }
         }
 
