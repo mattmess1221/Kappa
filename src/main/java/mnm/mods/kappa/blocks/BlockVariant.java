@@ -63,4 +63,14 @@ public @interface BlockVariant {
      * Defaults to {@code true}
      */
     boolean createItem() default true;
+
+    /**
+     * The pitch rotation. Defaults to {@code 0}.
+     */
+    int pitch() default 0;
+
+    /**
+     * The raw rotation. Defaults to {@code 0}.
+     */
+    int yaw() default 0;
 }
