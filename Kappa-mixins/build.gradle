@@ -1,0 +1,46 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+sourceCompatibility=1.6
+targetCompatibility=1.6
+
+archivesBaseName = "Kappa-mixins"
+group = "mnm.mods.kappa"
+version = "1.0"
+repositories {
+    mavenCentral()
+    maven {
+        // for srg2source
+        name = "forge"
+        url = "http://files.minecraftforge.net/maven"
+    }
+    maven {
+        // because Srg2Source needs an eclipse dependency.
+        name = "eclipse"
+        url = "https://repo.eclipse.org/content/groups/eclipse/"
+    }
+    maven {
+        name = 'minecraft'
+        url = 'https://libraries.minecraft.net/'
+    }
+}
+dependencies {
+	compile fileTree("libs/")
+	// required by mixin
+    compile 'com.google.guava:guava:18.0'
+    compile 'org.ow2.asm:asm-debug-all:5.0.3'
+    compile ('net.minecraft:launchwrapper:1.11'){
+		exclude group: "org.lwjgl.lwjgl"
+	}
+    compile 'com.google.code.gson:gson:2.2.4'
+    compile 'commons-io:commons-io:2.4'
+}
+jar {
+    // package deps so factory path doesn't require further tweaking.
+	// TODO find way of adding required libs to factory path
+    configurations.compile.each { dep ->
+        from (project.zipTree(dep)) {
+            exclude 'META-INF', 'META-INF/**'
+        }
+    }
+}

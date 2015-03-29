@@ -1,1 +1,1 @@
-include 'Kappa-core', 'Kappa-gradle'
+include 'Kappa-core', 'Kappa-gradle', 'Kappa-mixins'
