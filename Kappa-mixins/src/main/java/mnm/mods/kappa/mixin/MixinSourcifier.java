@@ -1,9 +1,7 @@
 package mnm.mods.kappa.mixin;
 
-import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
 import java.net.URLClassLoader;
@@ -23,15 +21,12 @@ import javax.lang.model.type.MirroredTypesException;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.FileObject;
 import javax.tools.JavaFileObject;
-import javax.tools.StandardLocation;
 
-import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraft.launchwrapper.LaunchClassLoader;
 
 import org.spongepowered.asm.launch.MixinTweaker;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.transformer.MixinTransformer;
 
 /**
  * Annotation processor for Mixins which generates the resulting class files.
@@ -42,15 +37,12 @@ import org.spongepowered.asm.mixin.transformer.MixinTransformer;
 @SupportedAnnotationTypes("org.spongepowered.asm.mixin.Mixin")
 public class MixinSourcifier extends AbstractProcessor {
 
-    private IClassTransformer transformer;
-
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
 
         setupLaunch();
-        new MixinTweaker();
-        this.transformer = new MixinTransformer();
+        new MixinTweaker().injectIntoClassLoader(Launch.classLoader);
     }
 
     /**
@@ -111,15 +103,7 @@ public class MixinSourcifier extends AbstractProcessor {
      * @throws IOException If an IOException occurs
      */
     private byte[] applyMixin(TypeMirror clas, TypeElement mixin) throws IOException {
-        String name = clas.toString();
-        String pkg = name.substring(0, name.lastIndexOf("."));
-        String relativeName = name.substring(name.lastIndexOf('.') + 1) + ".class";
-        // I hope this works. It works kind of
-        FileObject file = this.processingEnv.getFiler().getResource(StandardLocation.CLASS_PATH, pkg, relativeName);
-        byte[] bytes = readClass(file);
-
-        // TODO this isn't working
-        bytes = transformer.transform(clas.toString(), clas.toString(), bytes);
+        byte[] bytes = Launch.classLoader.getClassBytes(clas.toString());
 
         return bytes;
     }
@@ -136,25 +120,6 @@ public class MixinSourcifier extends AbstractProcessor {
         } finally {
             closeQuietly(writer);
         }
-    }
-
-    private byte[] readClass(FileObject file) throws IOException {
-
-        InputStream in = null;
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try {
-            in = file.openInputStream();
-            while (in.available() > 0) {
-                int b = in.read();
-                if (b != -1) {
-                    baos.write(b);
-                }
-            }
-            baos.flush();
-        } finally {
-            closeQuietly(in);
-        }
-        return baos.toByteArray();
     }
 
     private static void closeQuietly(Closeable closeable) {
