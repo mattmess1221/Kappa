@@ -10,17 +10,22 @@ This application is a tool for developers to ensure that their
 Using this with javac is as easy as adding the jar to your
  classpath.
 
+####Universal
+You can use a plugin I made to automatically enable annotation
+ processing in Eclipse and IntelliJ and add any annotation
+ processors on the classpath. Just add this to your
+ buildscript and run your ide's gradle task.
+```
+plugins {
+	id 'mnm.gradle.ap-ide' version '1.0.2'
+}
+```
+
 ####Eclipse
 To allow Eclipse to use this, you will need to enable annotation
  processing in the compiler settings. See the guide
  [here](http://help.eclipse.org/luna/index.jsp?topic=%2Forg.eclipse.jdt.doc.isv%2Fguide%2Fjdt_apt_getting_started.htm)
- for more details. Alternatively if you use gradle, you can use
- Kappa-gradle, a plugin I made to automatically enable APT in
- Eclipse and add any annotation processors. Just add this line
- to your buildscript and run `gradlew eclipse`.
-```
-apply plugin: 'kappa'
-```
+ for more details.
 
 ####IntelliJ
 IntelliJ will also need annotation processing enabled. See the
